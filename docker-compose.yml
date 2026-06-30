@@ -1,0 +1,31 @@
+name: origami
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-dev}
+    container_name: origami-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4500
+      STATIC_DIR: /app/dist/client
+      GIT_SHA: ${GIT_SHA:-dev}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "127.0.0.1:4500:4500"
+    networks:
+      - edge_shared
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:4500/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  edge_shared:
+    external: true
