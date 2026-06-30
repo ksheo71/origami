@@ -11,16 +11,16 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: 3100
+      PORT: 3150
       STATIC_DIR: /app/dist/client
       GIT_SHA: ${GIT_SHA:-dev}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     ports:
-      - "127.0.0.1:3100:3100"
+      - "127.0.0.1:3150:3150"
     networks:
       - edge_shared
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3100/api/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3150/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3

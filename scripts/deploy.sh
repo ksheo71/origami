@@ -26,7 +26,7 @@ docker image prune -f >/dev/null || true
 echo "[deploy] health check (max 60s)"
 DEADLINE=$(( $(date +%s) + 60 ))
 while true; do
-  if curl -fsS http://127.0.0.1:3100/api/health >/dev/null; then
+  if curl -fsS http://127.0.0.1:3150/api/health >/dev/null; then
     echo "[deploy] healthy"
     break
   fi

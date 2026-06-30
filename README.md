@@ -10,8 +10,8 @@
 
 ```bash
 npm install
-npm run dev:server   # 백엔드 :3100
-npm run dev:client   # 프론트 :5173 (api는 3100으로 프록시)
+npm run dev:server   # 백엔드 :3150
+npm run dev:client   # 프론트 :5173 (api는 3150으로 프록시)
 ```
 
 ## 테스트
@@ -25,7 +25,7 @@ npm test
 ```bash
 docker network create edge_shared 2>/dev/null || true
 docker compose up -d --build
-curl http://localhost:3100/api/health
+curl http://localhost:3150/api/health
 ```
 
 ## 배포
