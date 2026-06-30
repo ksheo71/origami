@@ -1,7 +1,14 @@
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
+import { serveStatic } from '@hono/node-server/serve-static'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
-export function createApp(): Hono {
+export interface AppOptions {
+  staticDir?: string
+}
+
+export function createApp(opts: AppOptions = {}): Hono {
   const app = new Hono()
 
   app.get('/api/health', (c) => {
@@ -11,6 +18,16 @@ export function createApp(): Hono {
     })
   })
 
+  if (opts.staticDir) {
+    const staticDir = opts.staticDir
+    app.use('/assets/*', serveStatic({ root: staticDir }))
+    // SPA fallback: 모든 비-API GET 요청은 index.html
+    app.get('*', (c) => {
+      const html = readFileSync(join(staticDir, 'index.html'), 'utf-8')
+      return c.html(html)
+    })
+  }
+
   return app
 }
 
@@ -18,7 +35,8 @@ export function createApp(): Hono {
 const isMain = import.meta.url === `file://${process.argv[1]}`
 if (isMain) {
   const port = Number(process.env.PORT ?? 4500)
-  serve({ fetch: createApp().fetch, port }, (info) => {
-    console.log(JSON.stringify({ msg: 'server.listening', port: info.port }))
+  const staticDir = process.env.STATIC_DIR
+  serve({ fetch: createApp({ staticDir }).fetch, port }, (info) => {
+    console.log(JSON.stringify({ msg: 'server.listening', port: info.port, staticDir }))
   })
 }

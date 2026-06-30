@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { createApp } from './index.js'
+import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 describe('GET /api/health', () => {
   it('returns 200 with ok=true and version', async () => {
@@ -36,5 +39,48 @@ describe('GET /api/health', () => {
     } finally {
       if (original !== undefined) process.env.GIT_SHA = original
     }
+  })
+})
+
+describe('static serving', () => {
+  function setupStaticDir(): string {
+    const dir = mkdtempSync(join(tmpdir(), 'origami-static-'))
+    mkdirSync(join(dir, 'assets'))
+    writeFileSync(join(dir, 'index.html'), '<!doctype html><html><body>HOME</body></html>')
+    writeFileSync(join(dir, 'assets', 'app.js'), 'console.log("app")')
+    return dir
+  }
+
+  it('serves index.html for /', async () => {
+    const dir = setupStaticDir()
+    const app = createApp({ staticDir: dir })
+    const res = await app.request('/')
+    expect(res.status).toBe(200)
+    expect(await res.text()).toContain('HOME')
+  })
+
+  it('serves asset files', async () => {
+    const dir = setupStaticDir()
+    const app = createApp({ staticDir: dir })
+    const res = await app.request('/assets/app.js')
+    expect(res.status).toBe(200)
+    expect(await res.text()).toContain('console.log')
+  })
+
+  it('falls back to index.html for unknown route (SPA)', async () => {
+    const dir = setupStaticDir()
+    const app = createApp({ staticDir: dir })
+    const res = await app.request('/some/spa/route')
+    expect(res.status).toBe(200)
+    expect(await res.text()).toContain('HOME')
+  })
+
+  it('/api/health is not shadowed by static serving', async () => {
+    const dir = setupStaticDir()
+    const app = createApp({ staticDir: dir })
+    const res = await app.request('/api/health')
+    expect(res.status).toBe(200)
+    const body = await res.json() as { ok: boolean }
+    expect(body.ok).toBe(true)
   })
 })
