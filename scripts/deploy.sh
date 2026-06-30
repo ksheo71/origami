@@ -23,8 +23,8 @@ docker compose \
 echo "[deploy] image prune"
 docker image prune -f >/dev/null || true
 
-echo "[deploy] health check (max 60s)"
-DEADLINE=$(( $(date +%s) + 60 ))
+echo "[deploy] health check (max 90s)"
+DEADLINE=$(( $(date +%s) + 90 ))
 while true; do
   if curl -fsS http://127.0.0.1:3150/api/health >/dev/null; then
     echo "[deploy] healthy"
