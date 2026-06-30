@@ -177,11 +177,13 @@ curl -sS https://origami.myazit.kr/api/health
 
 기대: `{"ok":true,"version":"<짧은 git sha>"}`
 
-루트도 확인:
+루트 SPA가 정적 HTML로 응답하는지 확인:
 
 ```bash
-curl -sS https://origami.myazit.kr/ | grep 'hello, origami'
+curl -sS https://origami.myazit.kr/ | grep -E 'id="root"|<title>Origami'
 ```
+
+(실제 'hello, origami' 텍스트는 브라우저에서 React가 렌더하므로 raw HTML grep으로는 안 보임. 브라우저로 한 번 더 직접 확인.)
 
 이 두 응답이 정상이면 **Phase 0 완료**.
 

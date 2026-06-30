@@ -21,7 +21,9 @@ export function createApp(opts: AppOptions = {}): Hono {
   if (opts.staticDir) {
     const staticDir = opts.staticDir
     app.use('/assets/*', serveStatic({ root: staticDir }))
-    // SPA fallback: 모든 비-API GET 요청은 index.html
+    // Unmatched /api/* paths get a JSON 404 (not the SPA HTML).
+    app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404))
+    // SPA fallback for everything else.
     app.get('*', (c) => {
       const html = readFileSync(join(staticDir, 'index.html'), 'utf-8')
       return c.html(html)

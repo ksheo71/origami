@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, origami]
     timeout-minutes: 15
     steps:
       - name: invoke deploy.sh on host

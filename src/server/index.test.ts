@@ -83,4 +83,14 @@ describe('static serving', () => {
     const body = await res.json() as { ok: boolean }
     expect(body.ok).toBe(true)
   })
+
+  it('returns JSON 404 for unmatched /api/* paths (not SPA HTML)', async () => {
+    const dir = setupStaticDir()
+    const app = createApp({ staticDir: dir })
+    const res = await app.request('/api/does-not-exist')
+    expect(res.status).toBe(404)
+    const body = await res.json() as { error: string }
+    expect(body.error).toBe('not_found')
+    expect(res.headers.get('content-type')).toContain('application/json')
+  })
 })
