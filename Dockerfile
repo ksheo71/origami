@@ -16,12 +16,12 @@ RUN npm run build
 FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=4500
+ENV PORT=4600
 ENV STATIC_DIR=/app/dist/client
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 ARG GIT_SHA=dev
 ENV GIT_SHA=${GIT_SHA}
-EXPOSE 4500
+EXPOSE 4600
 CMD ["node", "dist/server/index.js"]

@@ -34,7 +34,7 @@ export function createApp(opts: AppOptions = {}): Hono {
 // 모듈로 import 될 때는 서버를 띄우지 않음.
 const isMain = import.meta.url === `file://${process.argv[1]}`
 if (isMain) {
-  const port = Number(process.env.PORT ?? 4500)
+  const port = Number(process.env.PORT ?? 4600)
   const staticDir = process.env.STATIC_DIR
   serve({ fetch: createApp({ staticDir }).fetch, port }, (info) => {
     console.log(JSON.stringify({ msg: 'server.listening', port: info.port, staticDir }))

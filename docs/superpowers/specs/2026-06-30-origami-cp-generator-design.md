@@ -55,7 +55,7 @@
   └─ HTTPS ─▶ Cloudflare Edge (TLS 종단)
        └─ Tunnel ─▶ cloudflared 컨테이너
             └─ HTTP ─▶ caddy 컨테이너 (:80)
-                 └─ reverse_proxy ─▶ origami-app:4500
+                 └─ reverse_proxy ─▶ origami-app:4600
 ```
 
 `*.myazit.kr` 와일드카드가 이미 잡혀 있어 Cloudflare 대시보드 수정 불필요. Caddyfile에 한 줄 추가하면 끝.
@@ -63,7 +63,7 @@
 ```caddy
 http://origami.myazit.kr {
     import common
-    reverse_proxy origami-app:4500
+    reverse_proxy origami-app:4600
 }
 ```
 
@@ -85,7 +85,7 @@ API endpoint가 1~2개라 별도 backend 컨테이너로 분리할 이득이 없
 | 운영 디렉터리 | `/opt/stack/services/public/myazit.kr/origami/` |
 | GitHub repo | `ksheo71/origami` |
 | 컨테이너 이름 | `origami-app` |
-| 컨테이너 포트 | `4500` (Phase 0에서 충돌 확인) |
+| 컨테이너 포트 | `4600` (Phase 0에서 4500이 hikers-frontend와 충돌 → 4600 확정) |
 | 시크릿 | `../.env`에 `ANTHROPIC_API_KEY` (0600) |
 | Docker 네트워크 | `edge_shared` (external: true) |
 
@@ -265,7 +265,7 @@ Phase 1은 (a)로 검증. Phase 4에서 (b) 채택 여부 결정. **TBD: 통합 
 
 - GitHub repo `ksheo71/origami` 생성, deploy key, `~/.ssh/config` 별칭
 - `Dockerfile` (multi-stage: Vite 빌드 → Node 서빙)
-- `docker-compose.yml` (`name: origami`, `edge_shared`, 포트 `4500`)
+- `docker-compose.yml` (`name: origami`, `edge_shared`, 포트 `4600`)
 - `scripts/deploy.sh`, `.github/workflows/deploy.yml`, self-hosted 러너 등록
 - `/opt/stack/services/public/myazit.kr/origami/` 운영 트리 + `.env`
 - Caddyfile에 1줄 추가 + push
@@ -352,5 +352,8 @@ Phase 1은 (a)로 검증. Phase 4에서 (b) 채택 여부 결정. **TBD: 통합 
 
 - **Origami Simulator 통합 방식**: iframe vs 번들. Phase 1 끝에 확정.
 - **NLP 솔버 선택**: 자체 augmented Lagrangian vs 외부 패키지. Phase 3 초입에 결정.
-- **포트 4500 충돌 여부**: Phase 0에서 확인 (다른 앱은 3200~4400).
 - **라이센스**: MIT vs Apache-2.0. repo 생성 시 결정.
+
+### 해소된 항목
+
+- ~~포트 4500 충돌 여부~~ → Phase 0에서 hikers-frontend와 충돌 발견. **4600 으로 확정**.
