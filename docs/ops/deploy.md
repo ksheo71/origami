@@ -45,14 +45,14 @@ chmod 600 .env
 
 > Phase 0 에서는 `ANTHROPIC_API_KEY` 가 비어 있어도 컨테이너가 뜨고 헬스체크 통과한다. Phase 2 시작 시 실제 키를 채운다.
 
-## 3. 포트 4600 충돌 검사
+## 3. 포트 3100 충돌 검사
 
 ```bash
-docker ps --format '{{.Names}}\t{{.Ports}}' | grep ':4600' || echo "포트 4600 OK"
-ss -tln | grep -E ':4600\b' || echo "포트 4600 OK"
+docker ps --format '{{.Names}}\t{{.Ports}}' | grep ':3100' || echo "포트 3100 OK"
+ss -tln | grep -E ':3100\b' || echo "포트 3100 OK"
 ```
 
-충돌이 있으면 `docker-compose.yml` 과 `scripts/deploy.sh`, `vite.config.ts` 프록시 대상의 포트를 동일하게 다른 번호로 교체 후 push (예: 4600).
+충돌이 있으면 `docker-compose.yml` 과 `scripts/deploy.sh`, `vite.config.ts` 프록시 대상의 포트를 동일하게 다른 번호로 교체 후 push (예: 3100).
 
 ## 4. deploy key 발급 + 등록
 
@@ -120,7 +120,7 @@ launchd 등록 (다른 앱의 `~/actions-runner-<앱>/` 패턴 그대로 복사)
 ```caddy
 http://origami.myazit.kr {
     import common
-    reverse_proxy origami-app:4600
+    reverse_proxy origami-app:3100
 }
 ```
 
@@ -190,6 +190,6 @@ curl -sS https://origami.myazit.kr/ | grep -E 'id="root"|<title>Origami'
 ## 트러블슈팅
 
 - **502 from Caddy**: `docker ps --filter name=origami-app` 으로 컨테이너 상태 확인. Up이 아니면 `docker logs origami-app`.
-- **헬스체크 실패**: `docker exec origami-app wget -qO- http://localhost:4600/api/health`. 컨테이너 내부에서 실패하면 빌드 산출물(`dist/server/index.js`)이 들어갔는지 확인.
+- **헬스체크 실패**: `docker exec origami-app wget -qO- http://localhost:3100/api/health`. 컨테이너 내부에서 실패하면 빌드 산출물(`dist/server/index.js`)이 들어갔는지 확인.
 - **Caddy가 새 호스트를 모름**: caddy 컨테이너 재기동(`gh workflow run deploy.yml --repo ksheo71/edge-caddy`). bind mount inode 이슈로 reload가 안 먹은 경우.
 - **러너가 깨어 있지 않음**: `cd ~/actions-runner-origami && ./svc.sh status`.
