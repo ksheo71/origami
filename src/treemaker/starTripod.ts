@@ -34,7 +34,7 @@ export function buildStarTripod(tree: Tree): StarTripod {
     throw new Error(`buildStarTripod requires exactly 1 branch node, got ${nonLeafNodes.length}`)
   }
   const branchNode = nonLeafNodes[0]
-  if (!branchNode) {
+  if (branchNode === undefined) {
     throw new Error('unreachable: nonLeafNodes.length === 1 but indexing returned undefined')
   }
   const branchNodeId = branchNode.id
