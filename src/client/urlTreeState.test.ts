@@ -55,15 +55,15 @@ describe('encodeTreeToUrlParam / decodeTreeFromUrlParam', () => {
     expect(decodeTreeFromUrlParam(encoded)).toBeNull()
   })
 
-  it('returns null for a tree that passes validateTree but is not a 3-leaf star (e.g. only 2 leaves)', () => {
-    const nonTripodTree = {
+  it('returns null for a tree that passes validateTree but the star engine cannot build (e.g. only 2 leaves, below the 3-leg minimum)', () => {
+    const unsupportedTree = {
       nodes: [{ id: 'branch' }, { id: 'leaf0' }, { id: 'leaf1' }],
       edges: [
         { from: 'branch', to: 'leaf0', length: 1 },
         { from: 'branch', to: 'leaf1', length: 1 },
       ],
     }
-    const json = JSON.stringify(nonTripodTree)
+    const json = JSON.stringify(unsupportedTree)
     const encoded = btoa(unescape(encodeURIComponent(json)))
       .replace(/\+/g, '-')
       .replace(/\//g, '_')

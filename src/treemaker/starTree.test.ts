@@ -21,7 +21,7 @@ describe('toStarTree', () => {
     ])
   })
 
-  it('still works for the 3-leg (tripod) case', () => {
+  it('still works for the 3-leg (minimum) case', () => {
     const star = toStarTree(starTree([1, 1, 1]))
     expect(star.legs).toHaveLength(3)
   })

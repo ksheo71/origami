@@ -4,6 +4,24 @@ import { packStarLeaves } from './starPacking.js'
 import type { StarTree } from './starTree.js'
 import type { EdgeAssignment } from '../shared/fold.js'
 
+function isInsideConvexPolygon(
+  p: { x: number; y: number },
+  poly: { x: number; y: number }[],
+): boolean {
+  let sign = 0
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i]!
+    const b = poly[(i + 1) % poly.length]!
+    const cross = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x)
+    if (cross !== 0) {
+      const s = Math.sign(cross)
+      if (sign === 0) sign = s
+      else if (s !== sign) return false
+    }
+  }
+  return true
+}
+
 function star(lengths: number[]): StarTree {
   return {
     branchNodeId: 'branch',
@@ -19,7 +37,7 @@ function countAssignments(list: EdgeAssignment[]): Record<string, number> {
 }
 
 describe('buildStarMolecule', () => {
-  it('for 3 equal legs, hub is the centroid (origin) and matches tripod structure', () => {
+  it('for 3 equal legs, hub is the centroid (origin) and matches the 3-leg star structure', () => {
     const molecule = buildStarMolecule(packStarLeaves(star([1, 1, 1])))
     expect(molecule.hub.x).toBeCloseTo(0, 6)
     expect(molecule.hub.y).toBeCloseTo(0, 6)
@@ -51,8 +69,11 @@ describe('buildStarMolecule', () => {
   })
 
   it('keeps the hub strictly inside (weighted centroid) for asymmetric legs', () => {
-    const molecule = buildStarMolecule(packStarLeaves(star([1, 1.5, 0.7, 1.2])))
+    const packing = packStarLeaves(star([1, 1.5, 0.7, 1.2]))
+    const molecule = buildStarMolecule(packing)
     expect(Number.isFinite(molecule.hub.x)).toBe(true)
     expect(Number.isFinite(molecule.hub.y)).toBe(true)
+    const polygon = packing.leaves.map((l) => l.position)
+    expect(isInsideConvexPolygon(molecule.hub, polygon)).toBe(true)
   })
 })
