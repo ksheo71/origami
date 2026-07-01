@@ -887,8 +887,10 @@ describe('treeToFold', () => {
     expect(a).toEqual(b)
   })
 
-  it('rejects a tree with a leg that dominates', () => {
-    expect(() => treeToFold(starTree([1, 1, 10, 1]))).toThrow()
+  it('rejects a tree that cannot be packed (non-adjacent overlap)', () => {
+    // [1,5,1,5] → the two long circles land on opposite corners and overlap
+    // (same real failure path as Task 2's PackingError test; [1,1,10,1] does NOT overlap)
+    expect(() => treeToFold(starTree([1, 5, 1, 5]))).toThrow()
   })
 })
 ```
