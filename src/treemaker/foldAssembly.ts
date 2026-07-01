@@ -25,8 +25,10 @@ export function assembleFold(tripod: StarTripod, molecule: RabbitEarMolecule): F
   const edges_foldAngle: (number | null)[] = []
 
   // Origami Simulator의 실제 데모 FOLD 자산에서 확인한 컨벤션(M=-180, V=180,
-  // 크리스가 아닌 edge는 null). 이 값이 없으면 시뮬레이터의 import 경로가
-  // fold.edges_foldAngle[i]를 인덱싱하다 TypeError로 죽는다(js/pattern.js:826).
+  // F=0, B=null). U(unassigned)는 데모 자산에 실제 사례가 없어 B와 같은
+  // null로 유추함 — 현재 assembleFold는 U를 생성하지 않으므로 미검증.
+  // 이 값이 없으면 시뮬레이터의 import 경로가 fold.edges_foldAngle[i]를
+  // 인덱싱하다 TypeError로 죽는다(js/pattern.js:825).
   const FOLD_ANGLE_BY_ASSIGNMENT: Record<EdgeAssignment, number | null> = {
     M: -180,
     V: 180,
