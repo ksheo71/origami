@@ -1,73 +1,75 @@
 import type { FoldDocument, EdgeAssignment } from '../shared/fold.js'
-import type { Point, StarTripod } from './starTripod.js'
-import type { RabbitEarMolecule } from './rabbitEarMolecule.js'
+import type { StarPacking } from './starPacking.js'
+import type { StarMolecule } from './starMolecule.js'
 
-export function assembleFold(tripod: StarTripod, molecule: RabbitEarMolecule): FoldDocument {
-  const [l0, l1, l2] = tripod.leaves
-  const [t01, t12, t20] = molecule.tangentPoints
-  const branchPoint = molecule.branchPoint
+// Origami Simulator 데모 자산에서 확인한 컨벤션. 없으면 import 경로가
+// fold.edges_foldAngle[i] 인덱싱에서 TypeError로 죽는다.
+const FOLD_ANGLE_BY_ASSIGNMENT: Record<EdgeAssignment, number | null> = {
+  M: -180,
+  V: 180,
+  B: null,
+  F: 0,
+  U: null,
+}
 
-  const vertexOrder: Point[] = [l0.position, l1.position, l2.position, branchPoint, t01, t12, t20]
-  const indexOf = new Map<Point, number>()
-  vertexOrder.forEach((point, index) => indexOf.set(point, index))
+export function assembleFold(packing: StarPacking, molecule: StarMolecule): FoldDocument {
+  const leaves = packing.leaves
+  const n = leaves.length
 
-  function indexOfPoint(point: Point): number {
-    const index = indexOf.get(point)
-    if (index === undefined) {
-      throw new Error('assembleFold: point not found in vertex list')
-    }
-    return index
+  // 정점 레이아웃: [leaf_0..leaf_{n-1}, hub, t_0..t_{n-1}]
+  const vertices_coords: [number, number][] = []
+  for (const leaf of leaves) {
+    vertices_coords.push([leaf.position.x, leaf.position.y])
+  }
+  const hubIndex = vertices_coords.length
+  vertices_coords.push([molecule.hub.x, molecule.hub.y])
+  const tangentStart = vertices_coords.length
+  for (const tp of molecule.tangentPoints) {
+    vertices_coords.push([tp.x, tp.y])
   }
 
-  const vertices_coords: [number, number][] = vertexOrder.map((p) => [p.x, p.y])
+  const leafIndex = (i: number): number => i
+  const tangentIndex = (i: number): number => tangentStart + i
+
   const edges_vertices: [number, number][] = []
   const edges_assignment: EdgeAssignment[] = []
   const edges_foldAngle: (number | null)[] = []
 
-  // Origami Simulator의 실제 데모 FOLD 자산에서 확인한 컨벤션(M=-180, V=180,
-  // F=0, B=null). U(unassigned)는 데모 자산에 실제 사례가 없어 B와 같은
-  // null로 유추함 — 현재 assembleFold는 U를 생성하지 않으므로 미검증.
-  // 이 값이 없으면 시뮬레이터의 import 경로가 fold.edges_foldAngle[i]를
-  // 인덱싱하다 TypeError로 죽는다(js/pattern.js:825).
-  const FOLD_ANGLE_BY_ASSIGNMENT: Record<EdgeAssignment, number | null> = {
-    M: -180,
-    V: 180,
-    B: null,
-    F: 0,
-    U: null,
-  }
-
-  function addEdge(a: Point, b: Point, assignment: EdgeAssignment): void {
-    edges_vertices.push([indexOfPoint(a), indexOfPoint(b)])
+  function addEdge(a: number, b: number, assignment: EdgeAssignment): void {
+    edges_vertices.push([a, b])
     edges_assignment.push(assignment)
     edges_foldAngle.push(FOLD_ANGLE_BY_ASSIGNMENT[assignment])
   }
 
-  // 경계: 삼각형의 세 변을 각 접선점에서 둘로 나눈다.
-  addEdge(l0.position, t01, 'B')
-  addEdge(t01, l1.position, 'B')
-  addEdge(l1.position, t12, 'B')
-  addEdge(t12, l2.position, 'B')
-  addEdge(l2.position, t20, 'B')
-  addEdge(t20, l0.position, 'B')
-
-  // 내부 크리스: 분기점에서 뻗어나가는 6개.
-  for (const crease of molecule.creases) {
-    addEdge(crease.from, crease.to, crease.assignment)
+  // 경계: 각 순환 변을 접선점에서 둘로 나눈다.
+  for (let i = 0; i < n; i++) {
+    addEdge(leafIndex(i), tangentIndex(i), 'B')
+    addEdge(tangentIndex(i), leafIndex((i + 1) % n), 'B')
   }
 
-  const faces_vertices: number[][] = [
-    [indexOfPoint(l0.position), indexOfPoint(t01), indexOfPoint(branchPoint)],
-    [indexOfPoint(t01), indexOfPoint(l1.position), indexOfPoint(branchPoint)],
-    [indexOfPoint(l1.position), indexOfPoint(t12), indexOfPoint(branchPoint)],
-    [indexOfPoint(t12), indexOfPoint(l2.position), indexOfPoint(branchPoint)],
-    [indexOfPoint(l2.position), indexOfPoint(t20), indexOfPoint(branchPoint)],
-    [indexOfPoint(t20), indexOfPoint(l0.position), indexOfPoint(branchPoint)],
-  ]
+  // 내부 크리스: 허브에서 각 잎으로.
+  for (let i = 0; i < n; i++) {
+    const assignment = molecule.leafCreaseAssignments[i]
+    if (assignment === undefined) throw new Error('unreachable')
+    addEdge(hubIndex, leafIndex(i), assignment)
+  }
+  // 내부 크리스: 허브에서 각 접선점으로.
+  for (let i = 0; i < n; i++) {
+    const assignment = molecule.tangentCreaseAssignments[i]
+    if (assignment === undefined) throw new Error('unreachable')
+    addEdge(hubIndex, tangentIndex(i), assignment)
+  }
+
+  // 면: 각 순환 변마다 삼각형 2개.
+  const faces_vertices: number[][] = []
+  for (let i = 0; i < n; i++) {
+    faces_vertices.push([leafIndex(i), tangentIndex(i), hubIndex])
+    faces_vertices.push([tangentIndex(i), leafIndex((i + 1) % n), hubIndex])
+  }
 
   return {
     file_spec: 1.1,
-    file_creator: 'origami-app TreeMaker engine (Phase 1)',
+    file_creator: 'origami-app TreeMaker engine (Phase 3)',
     vertices_coords,
     edges_vertices,
     edges_assignment,
