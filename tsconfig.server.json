@@ -3,9 +3,10 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "outDir": "dist/server",
-    "rootDir": "src/server",
+    "outDir": "dist",
+    "rootDir": "src",
     "noEmit": false
   },
-  "include": ["src/server/**/*"]
+  "include": ["src/server/**/*", "src/shared/**/*", "src/treemaker/**/*"],
+  "exclude": ["**/*.test.ts"]
 }
