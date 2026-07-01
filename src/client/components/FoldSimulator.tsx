@@ -15,7 +15,7 @@ export function FoldSimulator({ fold }: FoldSimulatorProps) {
     function handleMessage(event: MessageEvent): void {
       if (event.source !== iframeRef.current?.contentWindow) return
       if (isSimulatorReadyMessage(event.data)) {
-        iframeRef.current?.contentWindow?.postMessage(buildImportFoldMessage(fold), '*')
+        iframeRef.current?.contentWindow?.postMessage(buildImportFoldMessage(fold), SIMULATOR_URL)
       }
     }
     window.addEventListener('message', handleMessage)

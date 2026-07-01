@@ -55,4 +55,20 @@ describe('computeViewBox', () => {
     expect(viewBox.width).toBeCloseTo(3, 9)
     expect(viewBox.height).toBeCloseTo(2, 9)
   })
+
+  it('returns a degenerate but finite box for an empty vertex list (no NaN/Infinity)', () => {
+    const emptyFold: FoldDocument = {
+      file_spec: 1.1,
+      file_creator: 'test',
+      vertices_coords: [],
+      edges_vertices: [],
+      edges_assignment: [],
+      faces_vertices: [],
+    }
+    const viewBox = computeViewBox(emptyFold, 0.5)
+    expect(Number.isFinite(viewBox.minX)).toBe(true)
+    expect(Number.isFinite(viewBox.minY)).toBe(true)
+    expect(Number.isFinite(viewBox.width)).toBe(true)
+    expect(Number.isFinite(viewBox.height)).toBe(true)
+  })
 })

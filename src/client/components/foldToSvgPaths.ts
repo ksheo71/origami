@@ -45,11 +45,22 @@ export function computeViewBox(
   fold: FoldDocument,
   padding: number,
 ): { minX: number; minY: number; width: number; height: number } {
-  const xs = fold.vertices_coords.map(([x]) => x)
-  const ys = fold.vertices_coords.map(([, y]) => y)
-  const minX = Math.min(...xs) - padding
-  const minY = Math.min(...ys) - padding
-  const maxX = Math.max(...xs) + padding
-  const maxY = Math.max(...ys) + padding
-  return { minX, minY, width: maxX - minX, height: maxY - minY }
+  if (fold.vertices_coords.length === 0) {
+    return { minX: -padding, minY: -padding, width: padding * 2, height: padding * 2 }
+  }
+  const bounds = fold.vertices_coords.reduce(
+    (acc, [x, y]) => ({
+      minX: Math.min(acc.minX, x),
+      minY: Math.min(acc.minY, y),
+      maxX: Math.max(acc.maxX, x),
+      maxY: Math.max(acc.maxY, y),
+    }),
+    { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity },
+  )
+  return {
+    minX: bounds.minX - padding,
+    minY: bounds.minY - padding,
+    width: bounds.maxX - bounds.minX + padding * 2,
+    height: bounds.maxY - bounds.minY + padding * 2,
+  }
 }
