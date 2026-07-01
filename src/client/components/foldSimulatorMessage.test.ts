@@ -8,6 +8,7 @@ const sampleFold: FoldDocument = {
   vertices_coords: [[0, 0]],
   edges_vertices: [],
   edges_assignment: [],
+  edges_foldAngle: [],
   faces_vertices: [],
 }
 

@@ -16,6 +16,7 @@ const validTriangle: FoldDocument = {
     [2, 0],
   ],
   edges_assignment: ['B', 'B', 'B'],
+  edges_foldAngle: [null, null, null],
   faces_vertices: [[0, 1, 2]],
 }
 
@@ -26,6 +27,11 @@ describe('validateFold', () => {
 
   it('throws when edges_vertices and edges_assignment lengths differ', () => {
     const fold: FoldDocument = { ...validTriangle, edges_assignment: ['B', 'B'] }
+    expect(() => validateFold(fold)).toThrow(/length/)
+  })
+
+  it('throws when edges_vertices and edges_foldAngle lengths differ', () => {
+    const fold: FoldDocument = { ...validTriangle, edges_foldAngle: [null, null] }
     expect(() => validateFold(fold)).toThrow(/length/)
   })
 

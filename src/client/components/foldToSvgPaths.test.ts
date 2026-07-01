@@ -16,6 +16,7 @@ const sampleFold: FoldDocument = {
     [2, 0],
   ],
   edges_assignment: ['M', 'V', 'B'],
+  edges_foldAngle: [-180, 180, null],
   faces_vertices: [[0, 1, 2]],
 }
 
@@ -63,6 +64,7 @@ describe('computeViewBox', () => {
       vertices_coords: [],
       edges_vertices: [],
       edges_assignment: [],
+      edges_foldAngle: [],
       faces_vertices: [],
     }
     const viewBox = computeViewBox(emptyFold, 0.5)

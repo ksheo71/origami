@@ -22,10 +22,23 @@ export function assembleFold(tripod: StarTripod, molecule: RabbitEarMolecule): F
   const vertices_coords: [number, number][] = vertexOrder.map((p) => [p.x, p.y])
   const edges_vertices: [number, number][] = []
   const edges_assignment: EdgeAssignment[] = []
+  const edges_foldAngle: (number | null)[] = []
+
+  // Origami Simulator의 실제 데모 FOLD 자산에서 확인한 컨벤션(M=-180, V=180,
+  // 크리스가 아닌 edge는 null). 이 값이 없으면 시뮬레이터의 import 경로가
+  // fold.edges_foldAngle[i]를 인덱싱하다 TypeError로 죽는다(js/pattern.js:826).
+  const FOLD_ANGLE_BY_ASSIGNMENT: Record<EdgeAssignment, number | null> = {
+    M: -180,
+    V: 180,
+    B: null,
+    F: 0,
+    U: null,
+  }
 
   function addEdge(a: Point, b: Point, assignment: EdgeAssignment): void {
     edges_vertices.push([indexOfPoint(a), indexOfPoint(b)])
     edges_assignment.push(assignment)
+    edges_foldAngle.push(FOLD_ANGLE_BY_ASSIGNMENT[assignment])
   }
 
   // 경계: 삼각형의 세 변을 각 접선점에서 둘로 나눈다.
@@ -56,6 +69,7 @@ export function assembleFold(tripod: StarTripod, molecule: RabbitEarMolecule): F
     vertices_coords,
     edges_vertices,
     edges_assignment,
+    edges_foldAngle,
     faces_vertices,
   }
 }

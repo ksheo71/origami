@@ -56,4 +56,15 @@ describe('assembleFold', () => {
     const F = fold.faces_vertices.length + 1 // +1 for the outer unbounded face
     expect(V - E + F).toBe(2)
   })
+
+  it('populates edges_foldAngle with the Origami Simulator convention (M=-180, V=180, B=null)', () => {
+    const fold = buildSymmetricFold()
+    expect(fold.edges_foldAngle).toHaveLength(fold.edges_assignment.length)
+    fold.edges_assignment.forEach((assignment, i) => {
+      const angle = fold.edges_foldAngle[i]
+      if (assignment === 'M') expect(angle).toBe(-180)
+      else if (assignment === 'V') expect(angle).toBe(180)
+      else if (assignment === 'B') expect(angle).toBeNull()
+    })
+  })
 })
