@@ -1,0 +1,55 @@
+import type { FoldDocument, EdgeAssignment } from '../../shared/fold.js'
+
+export interface SvgSegment {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  stroke: string
+  strokeDasharray?: string
+}
+
+const STROKE_BY_ASSIGNMENT: Record<EdgeAssignment, string> = {
+  M: '#d33',
+  V: '#33d',
+  B: '#111',
+  F: '#999',
+  U: '#999',
+}
+
+export function foldToSvgSegments(fold: FoldDocument): SvgSegment[] {
+  return fold.edges_vertices.map(([a, b], index) => {
+    const assignment = fold.edges_assignment[index]
+    if (assignment === undefined) {
+      throw new Error(`foldToSvgSegments: missing edges_assignment at index ${index}`)
+    }
+    const coordsA = fold.vertices_coords[a]
+    const coordsB = fold.vertices_coords[b]
+    if (coordsA === undefined || coordsB === undefined) {
+      throw new Error('foldToSvgSegments: edge references missing vertex coordinates')
+    }
+    const [x1, y1] = coordsA
+    const [x2, y2] = coordsB
+    return {
+      x1,
+      y1,
+      x2,
+      y2,
+      stroke: STROKE_BY_ASSIGNMENT[assignment],
+      strokeDasharray: assignment === 'V' ? '0.05,0.05' : undefined,
+    }
+  })
+}
+
+export function computeViewBox(
+  fold: FoldDocument,
+  padding: number,
+): { minX: number; minY: number; width: number; height: number } {
+  const xs = fold.vertices_coords.map(([x]) => x)
+  const ys = fold.vertices_coords.map(([, y]) => y)
+  const minX = Math.min(...xs) - padding
+  const minY = Math.min(...ys) - padding
+  const maxX = Math.max(...xs) + padding
+  const maxY = Math.max(...ys) + padding
+  return { minX, minY, width: maxX - minX, height: maxY - minY }
+}
