@@ -179,12 +179,22 @@ describe('toStarTree', () => {
   })
 
   it('throws when an edge does not touch the branch node', () => {
+    // 3 legs on branch (passes the >=3 leaves + exactly-1-internal checks),
+    // plus a stray edge between two other nodes that touches neither branch nor a real leg.
     const tree: Tree = {
-      nodes: [{ id: 'branch' }, { id: 'l0' }, { id: 'l1' }, { id: 'l2' }],
+      nodes: [
+        { id: 'branch' },
+        { id: 'l0' },
+        { id: 'l1' },
+        { id: 'l2' },
+        { id: 'x' },
+        { id: 'y' },
+      ],
       edges: [
         { from: 'branch', to: 'l0', length: 1 },
         { from: 'branch', to: 'l1', length: 1 },
-        { from: 'l1', to: 'l2', length: 1 }, // l2 hangs off l1, not branch
+        { from: 'branch', to: 'l2', length: 1 },
+        { from: 'x', to: 'y', length: 1 }, // stray edge — touches neither branch
       ],
     }
     expect(() => toStarTree(tree)).toThrow(/touch the branch node/)
