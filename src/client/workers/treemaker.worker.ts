@@ -6,12 +6,16 @@ export interface TreemakerWorkerRequest {
   tree: Tree
 }
 
-export interface TreemakerWorkerResponse {
-  fold: FoldDocument
-}
+export type TreemakerWorkerResponse = { fold: FoldDocument } | { error: string }
 
 self.addEventListener('message', (event: MessageEvent<TreemakerWorkerRequest>) => {
-  const fold = treeToFold(event.data.tree)
-  const response: TreemakerWorkerResponse = { fold }
-  ;(self as unknown as Worker).postMessage(response)
+  try {
+    const fold = treeToFold(event.data.tree)
+    const response: TreemakerWorkerResponse = { fold }
+    ;(self as unknown as Worker).postMessage(response)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'unknown error computing crease pattern'
+    const response: TreemakerWorkerResponse = { error: message }
+    ;(self as unknown as Worker).postMessage(response)
+  }
 })

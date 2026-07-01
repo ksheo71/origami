@@ -163,4 +163,22 @@ describe('POST /api/tree-from-name', () => {
     })
     expect(res.status).toBe(503)
   })
+
+  it('returns 429 after exceeding the rate limit for the same client', async () => {
+    const app = createApp({ treeClient: fakeClient(validToolInput) })
+    for (let i = 0; i < 10; i++) {
+      const res = await app.request('/api/tree-from-name', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'crane' }),
+      })
+      expect(res.status).toBe(200)
+    }
+    const res = await app.request('/api/tree-from-name', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'crane' }),
+    })
+    expect(res.status).toBe(429)
+  })
 })

@@ -1,5 +1,5 @@
 import type { Tree } from '../shared/tree.js'
-import { validateTree } from '../shared/tree.js'
+import { treeToFold } from '../treemaker/treemaker.js'
 
 export function encodeTreeToUrlParam(tree: Tree): string {
   const json = JSON.stringify(tree)
@@ -13,7 +13,7 @@ export function decodeTreeFromUrlParam(param: string): Tree | null {
     const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
     const json = decodeURIComponent(escape(atob(padded)))
     const parsed = JSON.parse(json) as Tree
-    validateTree(parsed)
+    treeToFold(parsed) // validates connectivity AND the Phase 1 engine's tripod shape requirement
     return parsed
   } catch {
     return null

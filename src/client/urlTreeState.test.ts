@@ -54,4 +54,20 @@ describe('encodeTreeToUrlParam / decodeTreeFromUrlParam', () => {
       .replace(/=+$/, '')
     expect(decodeTreeFromUrlParam(encoded)).toBeNull()
   })
+
+  it('returns null for a tree that passes validateTree but is not a 3-leaf star (e.g. only 2 leaves)', () => {
+    const nonTripodTree = {
+      nodes: [{ id: 'branch' }, { id: 'leaf0' }, { id: 'leaf1' }],
+      edges: [
+        { from: 'branch', to: 'leaf0', length: 1 },
+        { from: 'branch', to: 'leaf1', length: 1 },
+      ],
+    }
+    const json = JSON.stringify(nonTripodTree)
+    const encoded = btoa(unescape(encodeURIComponent(json)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
+    expect(decodeTreeFromUrlParam(encoded)).toBeNull()
+  })
 })

@@ -17,6 +17,7 @@ function readTreeFromCurrentUrl(): Tree | null {
 export function App() {
   const [tree, setTree] = useState<Tree | null>(() => readTreeFromCurrentUrl())
   const [fold, setFold] = useState<FoldDocument | null>(null)
+  const [workerError, setWorkerError] = useState<string | null>(null)
 
   function handleTreeReady(newTree: Tree): void {
     const encoded = encodeTreeToUrlParam(newTree)
@@ -24,7 +25,17 @@ export function App() {
     url.searchParams.set('tree', encoded)
     window.history.replaceState(null, '', url.toString())
     setFold(null)
+    setWorkerError(null)
     setTree(newTree)
+  }
+
+  function resetToForm(): void {
+    const url = new URL(window.location.href)
+    url.searchParams.delete('tree')
+    window.history.replaceState(null, '', url.toString())
+    setFold(null)
+    setWorkerError(null)
+    setTree(null)
   }
 
   useEffect(() => {
@@ -33,7 +44,14 @@ export function App() {
       type: 'module',
     })
     worker.addEventListener('message', (event: MessageEvent<TreemakerWorkerResponse>) => {
-      setFold(event.data.fold)
+      if ('error' in event.data) {
+        setWorkerError(event.data.error)
+      } else {
+        setFold(event.data.fold)
+      }
+    })
+    worker.addEventListener('error', () => {
+      setWorkerError('도면을 계산하는 중 예상치 못한 오류가 발생했습니다.')
     })
     worker.postMessage({ tree })
     return () => worker.terminate()
@@ -44,6 +62,15 @@ export function App() {
       <main style={{ fontFamily: 'sans-serif', maxWidth: 480, margin: '0 auto' }}>
         <h1 style={{ padding: '24px 24px 0' }}>Origami CP Generator</h1>
         <AnimalNameForm onTreeReady={handleTreeReady} />
+      </main>
+    )
+  }
+
+  if (workerError) {
+    return (
+      <main style={{ fontFamily: 'sans-serif', padding: 24 }}>
+        <p style={{ color: '#c33' }}>{workerError}</p>
+        <button onClick={resetToForm}>다시 시도</button>
       </main>
     )
   }

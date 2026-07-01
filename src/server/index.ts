@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { generateTreeFromName, TreeGenerationError } from './llm/generateTree.js'
 import type { AnthropicMessageClient } from './llm/generateTree.js'
 import { createAnthropicClient } from './llm/anthropicClient.js'
+import { createRateLimiter } from './rateLimit.js'
 
 export interface AppOptions {
   staticDir?: string
@@ -14,6 +15,7 @@ export interface AppOptions {
 
 export function createApp(opts: AppOptions = {}): Hono {
   const app = new Hono()
+  const treeFromNameLimiter = createRateLimiter(60 * 60 * 1000, 10) // IP당 시간에 10회
 
   app.get('/api/health', (c) => {
     return c.json({
@@ -32,6 +34,14 @@ export function createApp(opts: AppOptions = {}): Hono {
     const name = (body as { name?: unknown }).name
     if (typeof name !== 'string' || name.trim().length === 0) {
       return c.json({ error: 'name must be a non-empty string' }, 400)
+    }
+
+    const clientKey =
+      c.req.header('cf-connecting-ip') ??
+      c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ??
+      'unknown'
+    if (!treeFromNameLimiter.tryConsume(clientKey)) {
+      return c.json({ error: 'rate limit exceeded, try again later' }, 429)
     }
 
     if (!opts.treeClient) {
