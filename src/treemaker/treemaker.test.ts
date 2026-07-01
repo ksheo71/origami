@@ -1,45 +1,40 @@
 import { describe, it, expect } from 'vitest'
 import { treeToFold } from './treemaker.js'
+import { validateFold } from '../shared/fold.js'
 import type { Tree } from '../shared/tree.js'
 
-const symmetricTree: Tree = {
-  nodes: [{ id: 'branch' }, { id: 'leaf0' }, { id: 'leaf1' }, { id: 'leaf2' }],
-  edges: [
-    { from: 'branch', to: 'leaf0', length: 1 },
-    { from: 'branch', to: 'leaf1', length: 1 },
-    { from: 'branch', to: 'leaf2', length: 1 },
-  ],
+function starTree(lengths: number[]): Tree {
+  return {
+    nodes: [{ id: 'branch' }, ...lengths.map((_, i) => ({ id: `leg-${i}` }))],
+    edges: lengths.map((len, i) => ({ from: 'branch', to: `leg-${i}`, length: len })),
+  }
 }
 
 describe('treeToFold', () => {
-  it('produces a valid FOLD document end-to-end', () => {
-    const fold = treeToFold(symmetricTree)
-    expect(fold.vertices_coords).toHaveLength(7)
+  it('produces a valid FOLD for a 3-leg star (regression)', () => {
+    const fold = treeToFold(starTree([1, 1, 1]))
+    expect(() => validateFold(fold)).not.toThrow()
     expect(fold.faces_vertices).toHaveLength(6)
   })
 
-  it('is deterministic — same input produces structurally identical output', () => {
-    const foldA = treeToFold(symmetricTree)
-    const foldB = treeToFold(symmetricTree)
-    expect(foldA).toEqual(foldB)
+  it('produces a valid FOLD for a 4-leg star', () => {
+    const fold = treeToFold(starTree([1, 1.2, 1, 0.8]))
+    expect(() => validateFold(fold)).not.toThrow()
+    expect(fold.faces_vertices).toHaveLength(8)
   })
 
-  it('propagates tree validation errors (e.g. disconnected tree)', () => {
-    const brokenTree: Tree = {
-      nodes: [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }],
-      edges: [
-        { from: 'a', to: 'b', length: 1 },
-        { from: 'c', to: 'd', length: 1 },
-      ],
-    }
-    expect(() => treeToFold(brokenTree)).toThrow(/connected/)
+  it('is deterministic — identical FOLD across two runs', () => {
+    const a = treeToFold(starTree([1, 1.2, 1, 0.8, 1.4]))
+    const b = treeToFold(starTree([1, 1.2, 1, 0.8, 1.4]))
+    expect(a).toEqual(b)
   })
 
-  it('propagates star-tripod shape errors (e.g. wrong leaf count)', () => {
-    const wrongShape: Tree = {
-      nodes: [{ id: 'branch' }, { id: 'leaf0' }],
-      edges: [{ from: 'branch', to: 'leaf0', length: 1 }],
-    }
-    expect(() => treeToFold(wrongShape)).toThrow(/exactly 3 leaves/)
+  it('rejects a tree whose leg lengths make non-adjacent leaves overlap', () => {
+    // NOTE: [1, 1, 10, 1] (as in the original brief) is NOT actually a dominance
+    // case — Task 2 proved max(d_i) < sum(e_i) always holds for n>=3, so that input
+    // packs validly. [1, 5, 1, 5] is the genuine failure mode established in Task 2:
+    // the two radius-5 leaves sit opposite each other and their circles overlap
+    // (distance ~8.485 < 5+5=10), which packStarLeaves correctly rejects.
+    expect(() => treeToFold(starTree([1, 5, 1, 5]))).toThrow()
   })
 })

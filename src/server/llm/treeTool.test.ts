@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { TREE_TOOL_SCHEMA, TREE_TOOL_NAME, buildSystemPrompt, tripodInputToTree } from './treeTool.js'
 import { validateTree } from '../../shared/tree.js'
-import { buildStarTripod } from '../../treemaker/starTripod.js'
+import { treeToFold } from '../../treemaker/treemaker.js'
 
 describe('TREE_TOOL_SCHEMA', () => {
   it('has the expected tool name', () => {
@@ -48,9 +48,9 @@ describe('tripodInputToTree', () => {
     expect(() => validateTree(tree)).not.toThrow()
   })
 
-  it('produces a tree usable by buildStarTripod (matches Phase 1 engine shape)', () => {
+  it('produces a tree usable by the engine (treeToFold)', () => {
     const tree = tripodInputToTree(sampleInput)
-    expect(() => buildStarTripod(tree)).not.toThrow()
+    expect(() => treeToFold(tree)).not.toThrow()
   })
 
   it('preserves leg lengths on the resulting edges', () => {
