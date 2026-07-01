@@ -1,40 +1,40 @@
 import type { Tree } from '../../shared/tree.js'
 
-export interface TripodLeg {
+export interface StarLegInput {
   label: string
   length: number
 }
 
-export interface TripodToolInput {
+export interface StarToolInput {
   creatureLabel: string
-  legs: [TripodLeg, TripodLeg, TripodLeg]
+  legs: StarLegInput[]
 }
 
-export const TREE_TOOL_NAME = 'emit_animal_tripod'
+export const TREE_TOOL_NAME = 'emit_animal_star'
 
 export const TREE_TOOL_SCHEMA = {
   name: TREE_TOOL_NAME,
   description:
-    '동물 이름을 종이접기용 "트라이포드"(분기점 1개 + 다리 3개짜리 별 모양 스틱 피겨)로 변환한다. ' +
-    '항상 정확히 3개의 다리만 만든다 — 실제 동물의 다리 개수와 무관하게, 가장 단순화된 형태로 추상화한다.',
+    '동물 이름을 종이접기용 "별 모양"(분기점 1개 + 다리 4~6개짜리 스틱 피겨)으로 변환한다. ' +
+    '실제 동물의 주요 신체 부위(머리·꼬리·다리·날개)를 4~6개의 다리로 표현한다.',
   input_schema: {
     type: 'object',
     properties: {
       creatureLabel: {
         type: 'string',
-        description: '입력받은 동물 이름 그대로 (예: "학", "도마뱀").',
+        description: '입력받은 동물 이름 그대로 (예: "학", "사자").',
       },
       legs: {
         type: 'array',
-        minItems: 3,
-        maxItems: 3,
-        description: '정확히 3개. 각 다리는 상대적 길이(양수)를 가진다.',
+        minItems: 4,
+        maxItems: 6,
+        description: '4개 이상 6개 이하. 각 다리는 상대적 길이(양수)를 가진다.',
         items: {
           type: 'object',
           properties: {
             label: {
               type: 'string',
-              description: '이 다리가 무엇을 상징하는지 (예: "wing-left", "tail").',
+              description: '이 다리가 무엇을 상징하는지 (예: "wing-left", "tail", "leg-front").',
             },
             length: {
               type: 'number',
@@ -57,33 +57,30 @@ export function buildSystemPrompt(): string {
     `반드시 ${TREE_TOOL_NAME} 도구를 호출해서 답하세요. 다른 형식의 답변은 허용되지 않습니다.`,
     '',
     '규칙:',
-    '- 다리는 항상 정확히 3개입니다. 실제 동물의 다리·날개·머리·꼬리 개수와 무관하게,',
-    '  그 동물을 대표하는 가장 중요한 3개의 신체 부위(또는 방향)로 단순화하세요.',
-    '  예: 학이라면 "양 날개"와 "머리+꼬리" 축 하나로 묶어 3개를 만들 수 있습니다.',
-    '- 길이는 1.0을 기준으로 한 상대값입니다. 대칭적인 동물이면 3개 다리 길이를 비슷하게,',
-    '  비대칭이 두드러지는 동물(예: 긴 꼬리)이면 그 다리만 길게 설정하세요.',
+    '- 다리는 4개 이상 6개 이하입니다. 그 동물을 대표하는 주요 신체 부위',
+    '  (머리·목·꼬리·다리·날개 등)를 4~6개 골라 각각 하나의 다리로 표현하세요.',
+    '  예: 사자라면 머리, 꼬리, 앞다리, 뒷다리 → 4개. 학이라면 양 날개, 머리, 꼬리 → 4개.',
+    '- 길이는 1.0을 기준으로 한 상대값입니다. 두드러지게 긴 부위(긴 꼬리·목)는 길게,',
+    '  짧은 부위는 짧게 설정하되, 한 다리가 나머지 합을 압도하지 않도록 하세요',
+    '  (너무 극단적이면 접기 도면을 만들 수 없습니다).',
     '- creatureLabel에는 입력받은 이름을 그대로 넣으세요.',
   ].join('\n')
 }
 
-export function tripodInputToTree(input: TripodToolInput): Tree {
+export function starInputToTree(input: StarToolInput): Tree {
   for (const leg of input.legs) {
     if (leg.length <= 0) {
-      throw new Error(`tripodInputToTree: leg length must be positive, got ${leg.length} for "${leg.label}"`)
+      throw new Error(
+        `starInputToTree: leg length must be positive, got ${leg.length} for "${leg.label}"`,
+      )
     }
   }
 
   return {
     nodes: [
       { id: 'branch', label: input.creatureLabel },
-      { id: 'leg-0', label: input.legs[0].label },
-      { id: 'leg-1', label: input.legs[1].label },
-      { id: 'leg-2', label: input.legs[2].label },
+      ...input.legs.map((leg, i) => ({ id: `leg-${i}`, label: leg.label })),
     ],
-    edges: [
-      { from: 'branch', to: 'leg-0', length: input.legs[0].length },
-      { from: 'branch', to: 'leg-1', length: input.legs[1].length },
-      { from: 'branch', to: 'leg-2', length: input.legs[2].length },
-    ],
+    edges: input.legs.map((leg, i) => ({ from: 'branch', to: `leg-${i}`, length: leg.length })),
   }
 }

@@ -103,7 +103,8 @@ describe('POST /api/tree-from-name', () => {
     legs: [
       { label: 'wing-a', length: 1 },
       { label: 'wing-b', length: 1 },
-      { label: 'head-tail', length: 1.5 },
+      { label: 'head', length: 1 },
+      { label: 'tail', length: 1.5 },
     ],
   }
 
@@ -120,8 +121,8 @@ describe('POST /api/tree-from-name', () => {
     })
     expect(res.status).toBe(200)
     const body = (await res.json()) as { tree: { nodes: unknown[]; edges: unknown[] } }
-    expect(body.tree.nodes).toHaveLength(4)
-    expect(body.tree.edges).toHaveLength(3)
+    expect(body.tree.nodes).toHaveLength(5)
+    expect(body.tree.edges).toHaveLength(4)
   })
 
   it('returns 400 when name is missing', async () => {

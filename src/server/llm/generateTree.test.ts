@@ -7,7 +7,8 @@ const validToolInput = {
   legs: [
     { label: 'wing-a', length: 1 },
     { label: 'wing-b', length: 1 },
-    { label: 'head-tail', length: 1.5 },
+    { label: 'head', length: 1 },
+    { label: 'tail', length: 1.5 },
   ],
 }
 
@@ -26,14 +27,14 @@ describe('generateTreeFromName', () => {
   it('returns a valid Tree on first successful attempt', async () => {
     const client = makeClient([validToolInput])
     const tree = await generateTreeFromName('crane', client)
-    expect(tree.nodes).toHaveLength(4)
+    expect(tree.nodes).toHaveLength(5)
     expect(client.createMessage).toHaveBeenCalledTimes(1)
   })
 
   it('retries once when the first tool call returns null (no tool use)', async () => {
     const client = makeClient([null, validToolInput])
     const tree = await generateTreeFromName('crane', client)
-    expect(tree.nodes).toHaveLength(4)
+    expect(tree.nodes).toHaveLength(5)
     expect(client.createMessage).toHaveBeenCalledTimes(2)
   })
 
@@ -41,7 +42,7 @@ describe('generateTreeFromName', () => {
     const invalidInput = { creatureLabel: 'crane', legs: [{ label: 'a', length: 1 }] }
     const client = makeClient([invalidInput, validToolInput])
     const tree = await generateTreeFromName('crane', client)
-    expect(tree.nodes).toHaveLength(4)
+    expect(tree.nodes).toHaveLength(5)
     expect(client.createMessage).toHaveBeenCalledTimes(2)
   })
 

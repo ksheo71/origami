@@ -1,77 +1,53 @@
 import { describe, it, expect } from 'vitest'
-import { TREE_TOOL_SCHEMA, TREE_TOOL_NAME, buildSystemPrompt, tripodInputToTree } from './treeTool.js'
-import { validateTree } from '../../shared/tree.js'
+import { TREE_TOOL_NAME, TREE_TOOL_SCHEMA, starInputToTree } from './treeTool.js'
 import { treeToFold } from '../../treemaker/treemaker.js'
 
-describe('TREE_TOOL_SCHEMA', () => {
-  it('has the expected tool name', () => {
-    expect(TREE_TOOL_SCHEMA.name).toBe(TREE_TOOL_NAME)
+describe('emit_animal_star tool', () => {
+  it('is named emit_animal_star and requires 4..6 legs', () => {
+    expect(TREE_TOOL_NAME).toBe('emit_animal_star')
+    expect(TREE_TOOL_SCHEMA.input_schema.properties.legs.minItems).toBe(4)
+    expect(TREE_TOOL_SCHEMA.input_schema.properties.legs.maxItems).toBe(6)
   })
 
-  it('requires exactly 3 legs', () => {
-    const legsSchema = (TREE_TOOL_SCHEMA.input_schema as any).properties.legs
-    expect(legsSchema.minItems).toBe(3)
-    expect(legsSchema.maxItems).toBe(3)
-  })
-})
-
-describe('buildSystemPrompt', () => {
-  it('returns a non-empty string mentioning exactly 3 legs', () => {
-    const prompt = buildSystemPrompt()
-    expect(prompt.length).toBeGreaterThan(0)
-    expect(prompt).toMatch(/3/)
-  })
-})
-
-describe('tripodInputToTree', () => {
-  const sampleInput = {
-    creatureLabel: 'crane',
-    legs: [
-      { label: 'wing-a', length: 1 },
-      { label: 'wing-b', length: 1 },
-      { label: 'head-tail', length: 1 },
-    ] as [
-      { label: string; length: number },
-      { label: string; length: number },
-      { label: string; length: number },
-    ],
-  }
-
-  it('produces a tree with 4 nodes and 3 edges', () => {
-    const tree = tripodInputToTree(sampleInput)
-    expect(tree.nodes).toHaveLength(4)
-    expect(tree.edges).toHaveLength(3)
+  it('starInputToTree builds a single-branch star tree', () => {
+    const tree = starInputToTree({
+      creatureLabel: '사자',
+      legs: [
+        { label: 'head', length: 1 },
+        { label: 'tail', length: 1.4 },
+        { label: 'leg-front', length: 0.8 },
+        { label: 'leg-back', length: 0.8 },
+      ],
+    })
+    expect(tree.nodes).toHaveLength(5) // branch + 4 legs
+    expect(tree.edges).toHaveLength(4)
+    expect(tree.edges.every((e) => e.from === 'branch')).toBe(true)
   })
 
-  it('produces a tree that passes validateTree', () => {
-    const tree = tripodInputToTree(sampleInput)
-    expect(() => validateTree(tree)).not.toThrow()
-  })
-
-  it('produces a tree usable by the engine (treeToFold)', () => {
-    const tree = tripodInputToTree(sampleInput)
+  it('the produced tree folds through the engine', () => {
+    const tree = starInputToTree({
+      creatureLabel: '학',
+      legs: [
+        { label: 'wing-l', length: 1.2 },
+        { label: 'wing-r', length: 1.2 },
+        { label: 'head', length: 1 },
+        { label: 'tail', length: 1.5 },
+      ],
+    })
     expect(() => treeToFold(tree)).not.toThrow()
   })
 
-  it('preserves leg lengths on the resulting edges', () => {
-    const tree = tripodInputToTree(sampleInput)
-    const lengths = tree.edges.map((e) => e.length).sort()
-    expect(lengths).toEqual([1, 1, 1])
-  })
-
-  it('rejects non-positive leg lengths', () => {
-    const badInput = {
-      ...sampleInput,
-      legs: [
-        { label: 'a', length: 0 },
-        { label: 'b', length: 1 },
-        { label: 'c', length: 1 },
-      ] as [
-        { label: string; length: number },
-        { label: string; length: number },
-        { label: string; length: number },
-      ],
-    }
-    expect(() => tripodInputToTree(badInput)).toThrow(/positive/)
+  it('rejects non-positive lengths', () => {
+    expect(() =>
+      starInputToTree({
+        creatureLabel: 'x',
+        legs: [
+          { label: 'a', length: 1 },
+          { label: 'b', length: 0 },
+          { label: 'c', length: 1 },
+          { label: 'd', length: 1 },
+        ],
+      }),
+    ).toThrow(/positive/)
   })
 })
