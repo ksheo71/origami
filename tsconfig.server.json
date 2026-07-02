@@ -7,6 +7,6 @@
     "rootDir": "src",
     "noEmit": false
   },
-  "include": ["src/server/**/*", "src/shared/**/*", "src/treemaker/**/*"],
+  "include": ["src/server/**/*"],
   "exclude": ["**/*.test.ts"]
 }
