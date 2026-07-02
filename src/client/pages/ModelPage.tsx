@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { getModelById } from '../catalog/catalog.js'
 import { loadModelSvg } from '../model/loadModelSvg.js'
 import { CreasePatternSvg } from '../components/CreasePatternSvg.js'
-import { SvgFoldSimulator } from '../components/SvgFoldSimulator.js'
 import { navigate } from '../router.js'
 
 export interface ModelPageProps {
@@ -47,8 +46,32 @@ export function ModelPage({ id }: ModelPageProps) {
             : svg ? <CreasePatternSvg svg={svg} />
             : <p style={{ padding: 24 }}>불러오는 중…</p>}
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {svg && <SvgFoldSimulator svg={svg} filename={model.id} />}
+        <div
+          style={{
+            flex: 1,
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+            padding: 24,
+            color: '#666',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#444' }}>3D 접기 미리보기는 준비 중이에요</div>
+          <div style={{ fontSize: 13, lineHeight: 1.6, maxWidth: 320 }}>
+            외부 3D 접기 도구(Origami Simulator)를 새 탭에서 열어 이 크리스패턴을 직접 불러와 접어볼 수 있어요.
+          </div>
+          <a
+            href="https://origamisimulator.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 14, color: '#2563eb' }}
+          >
+            Origami Simulator 열기 ↗
+          </a>
         </div>
       </div>
     </main>
